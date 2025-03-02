@@ -1,5 +1,5 @@
 azkaban:
-  url: "http://192.168.1.7:8081"  # Update with your Azkaban server URL
+  url: "192.168.1.7:8081"  # Update with your Azkaban server URL
 
 executionHistoryCount: 10  # Number of past executions to check
 thresholdPercentage: 40  # Alert threshold percentage
