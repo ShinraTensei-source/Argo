@@ -1,11 +1,13 @@
+namespace: monitoring  # Namespace where the app should be deployed
+
 azkaban:
-  url: "192.168.1.7:8081"  # Update with your Azkaban server URL
+  url: "http://192.168.1.7:8081"  # Update with your Azkaban server URL
 
 executionHistoryCount: 10  # Number of past executions to check
 thresholdPercentage: 40  # Alert threshold percentage
 
 slack:
-  webhook: "https://hooks.slack.com/services/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L"  # Update with your Slack Webhook URL
+  webhook: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"  # Update with your Slack Webhook URL
 
 image:
   repository: "python"  # Public Python image from DockerHub
@@ -73,5 +75,4 @@ persistence:
 
 config:
   logLevel: "INFO"  # Change to DEBUG if needed
-
 
