@@ -1,9 +1,77 @@
 azkaban:
-  url: "http://192.168.1.7:8081"
+  url: "http://192.168.1.7:8081"  # Update with your Azkaban server URL
 
-executionHistoryCount: 10
-thresholdPercentage: 40
+executionHistoryCount: 10  # Number of past executions to check
+thresholdPercentage: 40  # Alert threshold percentage
 
 slack:
-  webhook: "https://hooks.slack.com/services/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"
+  webhook: "https://hooks.slack.com/services/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L"  # Update with your Slack Webhook URL
+
+image:
+  repository: "python"  # Public Python image from DockerHub
+  tag: "3.9"  # Python version
+  pullPolicy: IfNotPresent  # Change to "Always" if using a private registry
+
+service:
+  type: ClusterIP  # Change to LoadBalancer if needed
+  port: 8081  # Port where Azkaban is running
+  annotations: {}  # Optional service annotations
+
+serviceAccount:
+  create: false  # Set to true if you need a custom service account
+  name: "default"
+
+ingress:
+  enabled: false  # Set to true if using Ingress
+  annotations: {}
+  hosts:
+    - host: azkaban.local  # Change to your domain if using Ingress
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+autoscaling:
+  enabled: false  # Set to true to enable Horizontal Pod Autoscaler (HPA)
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+securityContext:
+  enabled: false  # Set to true if you need specific security settings
+  runAsUser: 1000
+  fsGroup: 2000
+
+livenessProbe:
+  enabled: false  # Enable if you need health checks
+  initialDelaySeconds: 3
+  periodSeconds: 10
+
+readinessProbe:
+  enabled: false  # Enable if you need readiness checks
+  initialDelaySeconds: 3
+  periodSeconds: 10
+
+persistence:
+  enabled: false  # Set to true if you need persistent storage
+  size: 1Gi  # Storage size if enabled
+
+config:
+  logLevel: "INFO"  # Change to DEBUG if needed
+
 
