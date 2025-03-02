@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: azkaban-monitor-script
+  namespace: monitoring
+data:
+  monitor_azkaban.py: |
+    import os
+    import json
+    import requests
+    from datetime import datetime
+
+    AZKABAN_URL = os.getenv("AZKABAN_URL")
+    SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
+    EXECUTION_HISTORY_COUNT = int(os.getenv("EXECUTION_HISTORY_COUNT", 6))
+    THRESHOLD_PERCENTAGE = int(os.getenv("THRESHOLD_PERCENTAGE", 20))
+
+    def login_to_azkaban():
+        response = requests.post(f"{AZKABAN_URL}/", data={"action": "login", "username": "admin", "password": "admin"})
+        response.raise_for_status()
+        return response.json().get("session.id")
+
+    def fetch_last_executions(session_id):
+        url = f"{AZKABAN_URL}/manager"
+        params = {"ajax": "fetchFlowExecutions", "session.id": session_id, "start": 0, "length": EXECUTION_HISTORY_COUNT}
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        return response.json().get("executions", [])
+
+    def compute_average_runtime(executions):
+        runtimes = [(e["endTime"] - e["startTime"]) / (1000 * 60 * 60) for e in executions if e["status"] != "RUNNING"]
+        return sum(runtimes) / len(runtimes) if runtimes else None
+
+    def send_slack_alert(exec_id, current_runtime, avg_runtime):
+        threshold_runtime = avg_runtime * (1 + THRESHOLD_PERCENTAGE / 100)
+        if current_runtime > threshold_runtime:
+            message = f"*🚨 Azkaban Alert*\n*Execution ID:* `{exec_id}`\n*Current Runtime:* `{current_runtime:.2f}h`\n*Allowed Threshold:* `{threshold_runtime:.2f}h`"
+            requests.post(SLACK_WEBHOOK_URL, json={"text": message})
+
+    def monitor_flows():
+        session_id = login_to_azkaban()
+        executions = fetch_last_executions(session_id)
+        avg_runtime = compute_average_runtime(executions)
+        if avg_runtime:
+            latest_execution = executions[0]
+            exec_id = latest_execution["execId"]
+            current_time = int(datetime.now().timestamp() * 1000)
+            current_runtime = (current_time - latest_execution["startTime"]) / (1000 * 60 * 60)
+            send_slack_alert(exec_id, current_runtime, avg_runtime)
+
+    if __name__ == "__main__":
+        monitor_flows()
+

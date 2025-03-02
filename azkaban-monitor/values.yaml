@@ -1,0 +1,9 @@
+azkaban:
+  url: "http://192.168.1.7:8081"
+
+executionHistoryCount: 10
+thresholdPercentage: 40
+
+slack:
+  webhook: "https://hooks.slack.com/services/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"
+

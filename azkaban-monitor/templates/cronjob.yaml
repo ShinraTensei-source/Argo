@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: azkaban-monitor
+  namespace: monitoring
+spec:
+  schedule: "* * * * *"  # Runs every minute
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: azkaban-monitor
+            image: python:3.9  # Uses a public Python image (No Docker needed)
+            command: ["python", "/app/monitor_azkaban.py"]
+            env:
+              - name: AZKABAN_URL
+                value: "{{ .Values.azkaban.url }}"
+              - name: SLACK_WEBHOOK_URL
+                value: "{{ .Values.slack.webhook }}"
+              - name: EXECUTION_HISTORY_COUNT
+                value: "{{ .Values.executionHistoryCount }}"
+              - name: THRESHOLD_PERCENTAGE
+                value: "{{ .Values.thresholdPercentage }}"
+            volumeMounts:
+              - name: script-volume
+                mountPath: /app
+          volumes:
+          - name: script-volume
+            configMap:
+              name: azkaban-monitor-script
+          restartPolicy: OnFailure
+
